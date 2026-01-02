@@ -1,62 +1,47 @@
-name: Build and Deploy Vite App to AWS EC2 - MSN16
+name: 🚀 Build and Deploy MSN Frontend
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch: # Allows manual trigger if needed
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
     steps:
       - name: ⬇️ Checkout code
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup Node.js
+      - name: 🛠️ Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
-          cache: 'npm'
+          node-version: '20'
 
       - name: 📦 Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm install
 
-      - name: 🛠️ Build Vite app
+      - name: 🏗️ Build project
         run: |
           export NODE_OPTIONS="--max-old-space-size=4096"
           npm run build
 
-      - name: 📦 Archive build output (dist folder)
-        run: |
-          cd dist
-          tar -czf ../release.tar.gz .
-
-      - name: ☁️ Upload artifact
+      - name: 📤 Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: vite-build
-          path: release.tar.gz
+          path: dist/
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      contents: read
-
+    # This environment name MUST match what you created in GitHub Settings
+    environment: production 
     steps:
       - name: ⬇️ Download artifact
         uses: actions/download-artifact@v4
         with:
           name: vite-build
-
-      - name: 📂 Extract artifact
-        run: |
-          mkdir dist
-          tar -xzf release.tar.gz -C dist
 
       - name: 🚀 Deploy to AWS EC2 via SCP
         uses: appleboy/scp-action@v0.1.7
@@ -64,8 +49,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "dist/*"
+          port: 22
+          source: "*"
           target: /var/www/msn-frontend
-          strip_components: 1
-
-
+          rm: true
