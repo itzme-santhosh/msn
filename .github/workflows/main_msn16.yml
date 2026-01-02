@@ -62,7 +62,7 @@ jobs:
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: root
+          username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "dist/*"
           target: /var/www/msn-frontend
@@ -70,5 +70,6 @@ jobs:
 
 
           
+
 
 
