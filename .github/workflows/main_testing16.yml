@@ -1,71 +1,38 @@
-name: Build and Deploy Vite App to AWS EC2 - MSN16
+name: EC2 Auto Deployment
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
+  deploy:
+    runs-on: AWS
     steps:
-      - name: ⬇️ Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18.x'
-          cache: 'npm'
-
-      - name: 📦 Install dependencies
-        run: npm install --legacy-peer-deps
-
-      - name: 🛠️ Build Vite app
-        run: |
-          export NODE_OPTIONS="--max-old-space-size=4096"
-          npm run build
-
-      - name: 📦 Archive build output (dist folder)
-        run: |
-          cd dist
-          tar -czf ../release.tar.gz .
-
-      - name: ☁️ Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: vite-build
-          path: release.tar.gz
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: Approval
-    permissions:
-      contents: read
-
-    steps:
-      - name: ⬇️ Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: vite-build
-
-      - name: 📂 Extract artifact
-        run: |
-          mkdir dist
-          tar -xzf release.tar.gz -C dist
-
-      - name: 🚀 Deploy to AWS EC2 via SCP
-        uses: appleboy/scp-action@v0.1.7
+      - name: SSH and Deploy to EC2
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "dist/*"
-          target: /var/www/msn-frontend
-          strip_components: 1
+          script: |
+            # Navigate to project directory
+            cd ${{ secrets.EC2_PATH }}
+
+            # Update code
+            git pull
+
+            # STEP 4: Build the project
+            npm install --legacy-peer-deps
+            npm run build
+
+            # STEP 5: Find the process and kill (Port 3030)
+            # Use '|| true' to prevent the script from failing if no process is running
+            fuser -k 3030/tcp || true
+
+            # STEP 6: Start the service
+            # nohup ensures the process keeps running after the SSH session closes
+            nohup npm run start &
