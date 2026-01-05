@@ -1,4 +1,4 @@
-name: Build and Deploy Vite App to AWS EC2 - MSN16
+name: Build and Deploy Vite App to AWS EC2
 
 on:
   push:
@@ -70,6 +70,7 @@ jobs:
 
 
           
+
 
 
 
