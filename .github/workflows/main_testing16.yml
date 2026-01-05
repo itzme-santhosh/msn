@@ -35,5 +35,8 @@ jobs:
 
             # STEP 6: Start the service
             # nohup ensures the process keeps running after the SSH session closes
-            nohup npm run start &
+            nohup npm run start > output.log 2>&1 &
+            sleep 2 # Give it a moment to start
+            disown
+
 
