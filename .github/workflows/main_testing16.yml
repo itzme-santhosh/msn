@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: AWS
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -36,3 +36,4 @@ jobs:
             # STEP 6: Start the service
             # nohup ensures the process keeps running after the SSH session closes
             nohup npm run start &
+
