@@ -24,23 +24,34 @@ jobs:
           script: |
             set -e
 
-            echo "STEP 1: Go to project directory"
+            echo "STEP 1: Navigate to project directory"
             cd ${{ secrets.EC2_PATH }}
 
             echo "STEP 2: Pull latest code"
-            git_toggle=$(git status --porcelain)
-            if [ -n "$git_toggle" ]; then git stash; fi
+            if [ -n "$(git status --porcelain)" ]; then
+              git stash
+            fi
             git pull
 
-            echo "STEP 3: Generate image tag (commit SHA)"
-            IMAGE_TAG=$(git rev-parse --short HEAD)
+            echo "STEP 3: Determine next image tag number"
+            LAST_TAG=$(docker images my-node-app --format "{{.Tag}}" \
+              | grep -E '^[0-9]+$' \
+              | sort -n \
+              | tail -1)
+
+            if [ -z "$LAST_TAG" ]; then
+              IMAGE_TAG=1
+            else
+              IMAGE_TAG=$((LAST_TAG + 1))
+            fi
+
             echo "Using IMAGE_TAG=$IMAGE_TAG"
 
-            echo "STEP 4: Stop and remove old container"
+            echo "STEP 4: Stop and remove existing container"
             docker stop my-node-app || true
             docker rm my-node-app || true
 
-            echo "STEP 5: Build Docker image"
+            echo "STEP 5: Build Docker image with numeric tag"
             docker build \
               -t my-node-app:$IMAGE_TAG \
               -t my-node-app:latest .
