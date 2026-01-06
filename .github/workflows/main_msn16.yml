@@ -37,10 +37,7 @@ jobs:
             docker build -t my-node-app:latest .
 
             echo "STEP 5: Run new container"
-            docker run -d \
-              --name my-node-app \
-              -p 3000:3000 \
-              --restart unless-stopped \
-              my-node-app:latest
+            docker run -d -p 3000:3030 --name my-node-app my-node-app
 
             echo "Docker deployment completed successfully"
+
