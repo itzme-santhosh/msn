@@ -34,10 +34,11 @@ jobs:
             docker rm my-node-app || true
 
             echo "STEP 4: Build Docker image"
-            docker build -t my-node-app:latest .
+            docker build -t my-node-app:$IMAGE_TAG -t my-node-app:latest
 
             echo "STEP 5: Run new container"
             docker run -d -p 3000:3030 --name my-node-app my-node-app
 
             echo "Docker deployment completed successfully"
+
 
