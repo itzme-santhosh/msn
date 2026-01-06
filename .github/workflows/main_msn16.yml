@@ -33,7 +33,7 @@ jobs:
             fi
             git pull
 
-            echo "STEP 3: Determine next image tag number"
+            echo "STEP 3: Determine next numeric image tag"
             LAST_TAG=$(docker images my-node-app --format "{{.Tag}}" \
               | grep -E '^[0-9]+$' \
               | sort -n \
@@ -51,16 +51,14 @@ jobs:
             docker stop my-node-app || true
             docker rm my-node-app || true
 
-            echo "STEP 5: Build Docker image with numeric tag"
-            docker build \
-              -t my-node-app:$IMAGE_TAG \
-              -t my-node-app:latest .
+            echo "STEP 5: Build Docker image (single tag only)"
+            docker build -t my-node-app:$IMAGE_TAG .
 
-            echo "STEP 6: Run new container"
+            echo "STEP 6: Run new container using numeric tag"
             docker run -d \
               --name my-node-app \
               -p 3030:3000 \
               --restart unless-stopped \
-              my-node-app:latest
+              my-node-app:$IMAGE_TAG
 
             echo "Docker deployment completed successfully"
